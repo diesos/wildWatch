@@ -13,10 +13,16 @@ import {
   Alert
 } from "react-native";
 import { Maps } from "../features/map";
+import { getMarkers } from '../features/map/services/MarkerService';
+import { Marker } from '@/types';
+import ObservationsListModal from '../features/map/components/modals/ObservationsListModal';
 
 export default function LocationScreen() {
   const [isAuthorized, setIsAuthorized] = React.useState<boolean | null>(null);
   const [isLoading, setIsLoading] = React.useState(true);
+  const [markers, setMarkers] = React.useState<Marker[]>([]);
+  const [observationsModalVisible, setObservationsModalVisible] = React.useState(false);
+  const mapRef = React.useRef<any>(null);
 
   React.useEffect(() => {
     const checkPermissions = async () => {
@@ -52,6 +58,45 @@ export default function LocationScreen() {
   const handleGoBack = () => {
     router.back();
   };
+
+  const loadMarkers = async () => {
+    try {
+      const savedMarkers = await getMarkers();
+      setMarkers(savedMarkers);
+    } catch (error) {
+      console.error('Error loading markers:', error);
+    }
+  };
+
+  const handleObservationsClick = async () => {
+    await loadMarkers();
+    setObservationsModalVisible(true);
+  };
+
+  const handleCurrentPositionClick = async () => {
+    try {
+      const { status } = await Location.getForegroundPermissionsAsync();
+      if (status === 'granted') {
+        // Call flyToCurrentPosition if the map reference is available
+        if (mapRef.current && mapRef.current.flyToCurrentPosition) {
+          mapRef.current.flyToCurrentPosition();
+        } else {
+          Alert.alert('Position actuelle', 'Navigation vers votre position...');
+        }
+      } else {
+        Alert.alert('Permission requise', 'Accès à la localisation nécessaire');
+      }
+    } catch (error) {
+      Alert.alert('Erreur', 'Impossible d\'obtenir la position actuelle');
+    }
+  };
+
+  // Load markers when authorized
+  React.useEffect(() => {
+    if (isAuthorized) {
+      loadMarkers();
+    }
+  }, [isAuthorized]);
 
   // Loading state
   if (isLoading) {
@@ -157,7 +202,7 @@ export default function LocationScreen() {
 
       {/* Map container - takes half of remaining space */}
       <View style={styles.mapWrapper}>
-        <Maps />
+        <Maps ref={mapRef} />
       </View>
 
       {/* First divider */}
@@ -167,19 +212,42 @@ export default function LocationScreen() {
       <View style={styles.bottomSection}>
         <Text style={styles.legendTitle}>🌿 Légende</Text>
         <View style={styles.legendContainer}>
-          <View style={styles.legendItem}>
+          <TouchableOpacity 
+            style={styles.legendItem}
+            onPress={handleObservationsClick}
+            activeOpacity={0.7}
+          >
             <Text style={styles.legendIcon}>🏞️</Text>
-            <Text style={styles.legendText}>Mes observations</Text>
-          </View>
-          <View style={styles.legendItem}>
+            <Text style={styles.legendText}>Mes observations ({markers.length})</Text>
+            <Text style={styles.clickIndicator}>👆</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.legendItem}
+            onPress={handleCurrentPositionClick}
+            activeOpacity={0.7}
+          >
             <Text style={styles.legendIcon}>📍</Text>
             <Text style={styles.legendText}>Ma position actuelle</Text>
-          </View>
+            <Text style={styles.clickIndicator}>👆</Text>
+          </TouchableOpacity>
         </View>
       </View>
 
       {/* Second divider */}
       <View style={styles.divider} />
+      
+      <ObservationsListModal
+        visible={observationsModalVisible}
+        onClose={() => setObservationsModalVisible(false)}
+        markers={markers}
+        onMarkerSelect={(marker) => {
+          setObservationsModalVisible(false);
+          // Call flyToMarker if the map reference is available
+          if (mapRef.current && mapRef.current.flyToMarker) {
+            mapRef.current.flyToMarker(marker);
+          }
+        }}
+      />
     </SafeAreaView>
   );
 }
@@ -386,5 +454,10 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     fontWeight: '500',
     flex: 1,
+  },
+  clickIndicator: {
+    fontSize: 14,
+    marginLeft: 8,
+    opacity: 0.7,
   },
 });

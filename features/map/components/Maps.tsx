@@ -1,9 +1,10 @@
 import { useCurrentPosition } from "../hooks/useCurrentPosition";
 import CreateMarkerModal from "./modals/createMarker";
 import MarkerInfoModal from "./modals/MarkerInfoModal";
+import ObservationsListModal from "./modals/ObservationsListModal";
 import Mapbox, { MapView } from "@rnmapbox/maps";
-import React, { useCallback, useEffect } from "react";
-import { StyleSheet, View, Image, Text, ActivityIndicator, Animated, Alert } from "react-native";
+import React, { useCallback, useEffect, useImperativeHandle, forwardRef } from "react";
+import { StyleSheet, View, Text, ActivityIndicator, Animated, Alert } from "react-native";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getMarkers } from '../services/MarkerService';
 import { Marker } from '@/types';
@@ -120,10 +121,11 @@ const styles = StyleSheet.create({
 
 
 
-const Maps = () => {
+const Maps = forwardRef((props, ref) => {
   const coordinates = useCurrentPosition();
 
-const mapRef = React.useRef(null);
+const mapRef = React.useRef<any>(null);
+const cameraRef = React.useRef<any>(null);
 const [modalVisible, setModalVisible] = React.useState(false);
 const [selectedCoords, setSelectedCoords] = React.useState({ lat: 0, lng: 0 });
 const [savedMarkers, setSavedMarkers] = React.useState<Marker[]>([]);
@@ -134,9 +136,48 @@ const [isLoadingMap, setIsLoadingMap] = React.useState(true);
 const [isLoadingMarkers, setIsLoadingMarkers] = React.useState(false);
 const [isSavingMarker, setIsSavingMarker] = React.useState(false);
 const [animatedMarkers, setAnimatedMarkers] = React.useState<{[key: string]: Animated.Value}>({});
+const [observationsModalVisible, setObservationsModalVisible] = React.useState(false);
+const [cameraConfig, setCameraConfig] = React.useState({
+  centerCoordinate: [0, 0],
+  zoomLevel: 13,
+  animationMode: "flyTo" as const,
+  animationDuration: 2000
+});
 const coordinateToArray = () => {
     return [coordinates.longitude, coordinates.latitude];
   };
+
+  const flyToMarker = (marker: Marker) => {
+    setCameraConfig({
+      centerCoordinate: [marker.longitude, marker.latitude],
+      zoomLevel: 16,
+      animationMode: "flyTo",
+      animationDuration: 2000
+    });
+    
+    // Optionally show the marker info after flying to it
+    setTimeout(() => {
+      setSelectedMarker(marker);
+      setInfoModalVisible(true);
+    }, 2500);
+  };
+
+  const flyToCurrentPosition = () => {
+    if (coordinates.latitude !== 0 && coordinates.longitude !== 0) {
+      setCameraConfig({
+        centerCoordinate: [coordinates.longitude, coordinates.latitude],
+        zoomLevel: 16,
+        animationMode: "flyTo",
+        animationDuration: 2000
+      });
+    }
+  };
+
+  // Expose functions to parent component
+  useImperativeHandle(ref, () => ({
+    flyToMarker,
+    flyToCurrentPosition
+  }));
  const getBboxAndFetch = useCallback(async () => {
       try {
           // Vérifier les permissions de géolocalisation
@@ -151,11 +192,8 @@ const coordinateToArray = () => {
             return;
           }
           
-          console.log('Coordinates:', coordinates);
-          
           // Debug AsyncStorage
           const saved = await AsyncStorage.getItem('markers');
-          console.log('Saved markers:', saved);
           
           setIsLoadingMap(false);
       } catch (error) {
@@ -196,12 +234,20 @@ const coordinateToArray = () => {
       });
       
       setIsLoadingMarkers(false);
-      console.log('Loaded markers:', markers);
-      console.log('Number of markers:', markers.length);
     };
     
     loadMarkers();
   }, [modalVisible]); // Se déclenche quand la modale se ferme
+
+  // Initialize camera with current position
+  React.useEffect(() => {
+    if (coordinates.latitude !== 0 && coordinates.longitude !== 0 && cameraConfig.centerCoordinate[0] === 0) {
+      setCameraConfig(prev => ({
+        ...prev,
+        centerCoordinate: [coordinates.longitude, coordinates.latitude]
+      }));
+    }
+  }, [coordinates, cameraConfig.centerCoordinate]);
 
   return (
     <View style={styles.page}>
@@ -227,20 +273,19 @@ const coordinateToArray = () => {
 		ref={mapRef}
 		onDidFinishLoadingMap={getBboxAndFetch}
 		onPress={(event) => {
-      console.log('MAP CLICKED!', event);
       // Récupérer les coordonnées du clic
       if ('coordinates' in event.geometry) {
         const coords = event.geometry.coordinates as [number, number];
-        console.log('Clicked coordinates:', coords);
         setSelectedCoords({ lat: coords[1], lng: coords[0] });
         setModalVisible(true);
       }
     }}>
           <Mapbox.Camera
-            centerCoordinate={coordinateToArray()}
-            zoomLevel={13}
-			animationMode={"flyTo"}
-			animationDuration={2000}
+            ref={cameraRef}
+            centerCoordinate={cameraConfig.centerCoordinate[0] === 0 ? coordinateToArray() : cameraConfig.centerCoordinate}
+            zoomLevel={cameraConfig.zoomLevel}
+			animationMode={cameraConfig.animationMode}
+			animationDuration={cameraConfig.animationDuration}
           />
           
           {/* Pin pour la position actuelle */}
@@ -318,9 +363,18 @@ const coordinateToArray = () => {
             loadMarkers();
           }}
         />
+        
+        <ObservationsListModal
+          visible={observationsModalVisible}
+          onClose={() => setObservationsModalVisible(false)}
+          markers={savedMarkers}
+          onMarkerSelect={flyToMarker}
+        />
       </View>
     </View>
   );
-};
+});
+
+Maps.displayName = 'Maps';
 
 export default Maps;
