@@ -1,0 +1,1 @@
+export { saveMarkers, getMarkers, deleteMarker, deleteAllMarkers } from './MarkerService';

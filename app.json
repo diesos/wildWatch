@@ -28,6 +28,13 @@
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
+      [
+        "@rnmapbox/maps",
+        {
+          "RNMapboxMapsImpl": "mapbox",
+          "RNMapboxMapsDownloadToken": "sk.eyJ1Ijoic3JheW5hdWQtbGFtb2JpbGVyeSIsImEiOiJjbWZoY2hzMGUwYmtoMmlxdG5vdHRneXFlIn0.NDrbW7jA9GC9txgBp_lVJw"
+        }
+      ],
       "expo-router",
       [
         "expo-splash-screen",
@@ -41,11 +48,29 @@
           }
         }
       ],
-      "expo-location",
-      {
-        "locationAlwaysAndWhenInUsePermission": "Allow $(PRODUCT_NAME) to use your location."
-      }
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow wildWatch to access your location.",
+          "locationAlwaysPermission": "Allow wildWatch to always access your location.",
+          "locationWhenInUsePermission": "Allow wildWatch to access your location when using the app.",
+          "isAndroidBackgroundLocationEnabled": false
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "deploymentTarget": "15.1",
+            "useFrameworks": "static"
+          }
+        }
+      ]
     ],
+    "extra": {
+      "mapboxAccessToken": "pk.eyJ1Ijoic3JheW5hdWQtbGFtb2JpbGVyeSIsImEiOiJjbWZmdTRienQwb2F4MmtzYmprNWxieWZwIn0.mgySs3rW_6jA7hEKCF7ycw",
+      "mapboxDownloadToken": "sk.eyJ1Ijoic3JheW5hdWQtbGFtb2JpbGVyeSIsImEiOiJjbWZoY2hzMGUwYmtoMmlxdG5vdHRneXFlIn0.NDrbW7jA9GC9txgBp_lVJw"
+    },
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
