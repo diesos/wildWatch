@@ -38,6 +38,7 @@ WildWatch est une application React Native développée avec Expo qui permet aux
 - **Expo CLI** : `npm install -g @expo/cli`
 - **iOS** : Xcode 13+ (macOS uniquement)
 - **Android** : Android Studio avec SDK 31+
+- **MapBox** : Token mapbox
 
 ### 🛠️ Installation
 
@@ -61,6 +62,27 @@ WildWatch est une application React Native développée avec Expo qui permet aux
    ```typescript
    // features/map/components/Maps.tsx
    Mapbox.setAccessToken("VOTRE_TOKEN_MAPBOX_ICI");
+   ```
+
+   et dans
+
+   ```bash
+   // app.json
+       "plugins": [
+      [
+        "@rnmapbox/maps",
+        {
+          "RNMapboxMapsImpl": "mapbox",
+          "RNMapboxMapsDownloadToken": "sk.ey**3"
+        }
+   ```
+
+      ```bash
+   // app.json
+    "extra": {
+      "mapboxAccessToken": "pk.**",
+      "mapboxDownloadToken": "sk.**"
+    },
    ```
 
 ### 📱 Lancement de l'application
