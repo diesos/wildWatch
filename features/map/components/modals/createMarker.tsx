@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Modal, StyleSheet, Alert, Image } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, Modal, StyleSheet, Alert, Image, ActivityIndicator } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { saveMarkers, getMarkers } from '../../services/MarkerService';
 import { Marker } from '@/types';
@@ -10,9 +10,12 @@ type CreateMarkerModalProps = {
   latitude: number;
   longitude: number;
   editMarker?: Marker; // Pour le mode édition
+  isSaving?: boolean;
+  onStartSaving?: () => void;
+  onFinishSaving?: () => void;
 };
 
-const CreateMarkerModal = ({ visible, onClose, latitude, longitude, editMarker }: CreateMarkerModalProps) => {
+const CreateMarkerModal = ({ visible, onClose, latitude, longitude, editMarker, isSaving, onStartSaving, onFinishSaving }: CreateMarkerModalProps) => {
   const [name, setName] = useState(editMarker?.name || '');
   const [img, setImg] = useState(editMarker?.img || '');
 
@@ -75,6 +78,8 @@ const CreateMarkerModal = ({ visible, onClose, latitude, longitude, editMarker }
       return;
     }
 
+    onStartSaving?.();
+
     try {
       const existingMarkers = await getMarkers();
       
@@ -110,8 +115,10 @@ const CreateMarkerModal = ({ visible, onClose, latitude, longitude, editMarker }
 
       setName('');
       setImg('');
+      onFinishSaving?.();
       onClose();
     } catch (error) {
+      onFinishSaving?.();
       Alert.alert('Erreur', 'Impossible de sauvegarder le marker');
       console.error('Error saving marker:', error);
     }
@@ -166,8 +173,19 @@ const CreateMarkerModal = ({ visible, onClose, latitude, longitude, editMarker }
               <Text style={styles.cancelButtonText}>Annuler</Text>
             </TouchableOpacity>
             
-            <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-              <Text style={styles.saveButtonText}>Sauvegarder</Text>
+            <TouchableOpacity 
+              style={[styles.saveButton, isSaving && styles.savingButton]} 
+              onPress={handleSave}
+              disabled={isSaving}
+            >
+              {isSaving ? (
+                <View style={styles.savingContainer}>
+                  <ActivityIndicator size="small" color="white" style={styles.savingIndicator} />
+                  <Text style={styles.saveButtonText}>Sauvegarde...</Text>
+                </View>
+              ) : (
+                <Text style={styles.saveButtonText}>Sauvegarder</Text>
+              )}
             </TouchableOpacity>
           </View>
         </View>
@@ -267,6 +285,16 @@ const styles = StyleSheet.create({
     padding: 15,
     borderRadius: 8,
     alignItems: 'center',
+  },
+  savingButton: {
+    backgroundColor: '#9BB5E8',
+  },
+  savingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  savingIndicator: {
+    marginRight: 8,
   },
   saveButtonText: {
     fontSize: 16,
