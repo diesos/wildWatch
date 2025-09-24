@@ -93,6 +93,25 @@ const styles = StyleSheet.create({
   },
   markerIcon: {
     fontSize: 20,
+  },
+  currentPositionMarker: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 40,
+    height: 40,
+    backgroundColor: '#007AFF',
+    borderRadius: 20,
+    borderWidth: 3,
+    borderColor: '#ffffff',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 6,
+  },
+  currentPositionIcon: {
+    fontSize: 20,
+    color: '#ffffff',
   }
 });
 
@@ -223,6 +242,19 @@ const coordinateToArray = () => {
 			animationMode={"flyTo"}
 			animationDuration={2000}
           />
+          
+          {/* Pin pour la position actuelle */}
+          {coordinates.latitude !== 0 && coordinates.longitude !== 0 && (
+            <Mapbox.PointAnnotation
+              id="current-position"
+              coordinate={[coordinates.longitude, coordinates.latitude]}
+            >
+              <View style={styles.currentPositionMarker}>
+                <Text style={styles.currentPositionIcon}>📍</Text>
+              </View>
+            </Mapbox.PointAnnotation>
+          )}
+          
 		   {savedMarkers.map((marker) => {
           const animationValue = animatedMarkers[marker.id] || new Animated.Value(1);
           return (

@@ -155,7 +155,31 @@ export default function LocationScreen() {
         <View style={styles.placeholder} />
       </View>
 
-      <Maps />
+      {/* Map container - takes half of remaining space */}
+      <View style={styles.mapWrapper}>
+        <Maps />
+      </View>
+
+      {/* First divider */}
+      <View style={styles.divider} />
+
+      {/* Bottom section - takes half of screen */}
+      <View style={styles.bottomSection}>
+        <Text style={styles.legendTitle}>🌿 Légende</Text>
+        <View style={styles.legendContainer}>
+          <View style={styles.legendItem}>
+            <Text style={styles.legendIcon}>🏞️</Text>
+            <Text style={styles.legendText}>Mes observations</Text>
+          </View>
+          <View style={styles.legendItem}>
+            <Text style={styles.legendIcon}>📍</Text>
+            <Text style={styles.legendText}>Ma position actuelle</Text>
+          </View>
+        </View>
+      </View>
+
+      {/* Second divider */}
+      <View style={styles.divider} />
     </SafeAreaView>
   );
 }
@@ -320,5 +344,47 @@ const styles = StyleSheet.create({
   },
   placeholder: {
     width: 40,
+  },
+  mapWrapper: {
+    flex: 1,
+  },
+  divider: {
+    height: 2,
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+  },
+  bottomSection: {
+    flex: 1,
+    backgroundColor: 'rgba(26, 77, 58, 0.8)',
+    padding: 20,
+    justifyContent: 'center',
+  },
+  legendTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#ffffff',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  legendContainer: {
+    gap: 15,
+  },
+  legendItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    padding: 15,
+    borderRadius: 10,
+    borderLeftWidth: 4,
+    borderLeftColor: '#4CAF50',
+  },
+  legendIcon: {
+    fontSize: 20,
+    marginRight: 15,
+  },
+  legendText: {
+    fontSize: 16,
+    color: '#ffffff',
+    fontWeight: '500',
+    flex: 1,
   },
 });
