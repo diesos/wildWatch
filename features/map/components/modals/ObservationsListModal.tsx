@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, Modal, StyleSheet, TouchableOpacity, ScrollView, Image } from 'react-native';
+import { View, Text, Modal, StyleSheet, TouchableOpacity, ScrollView, Image, TouchableWithoutFeedback } from 'react-native';
 import { Marker } from '@/types';
 
 type ObservationsListModalProps = {
@@ -28,8 +28,10 @@ const ObservationsListModal = ({ visible, onClose, markers, onMarkerSelect }: Ob
 
   return (
     <Modal visible={visible} transparent animationType="slide">
-      <View style={styles.overlay}>
-        <View style={styles.modal}>
+      <TouchableWithoutFeedback onPress={onClose}>
+        <View style={styles.overlay}>
+          <TouchableWithoutFeedback onPress={() => {}}>
+            <View style={styles.modal}>
           <View style={styles.header}>
             <Text style={styles.title}>🌿 Mes Observations</Text>
             <TouchableOpacity onPress={onClose} style={styles.closeButton}>
@@ -84,8 +86,10 @@ const ObservationsListModal = ({ visible, onClose, markers, onMarkerSelect }: Ob
               {markers.length} observation{markers.length > 1 ? 's' : ''}
             </Text>
           </View>
+            </View>
+          </TouchableWithoutFeedback>
         </View>
-      </View>
+      </TouchableWithoutFeedback>
     </Modal>
   );
 };

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Modal, StyleSheet, Alert, Image, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, Modal, StyleSheet, Alert, Image, ActivityIndicator, TouchableWithoutFeedback } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { saveMarkers, getMarkers } from '../../services/MarkerService';
 import { Marker } from '@/types';
@@ -27,7 +27,7 @@ const CreateMarkerModal = ({ visible, onClose, latitude, longitude, editMarker, 
     }
 
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ['images'],
       allowsEditing: true,
       aspect: [4, 3],
       quality: 0.5,
@@ -100,7 +100,7 @@ const CreateMarkerModal = ({ visible, onClose, latitude, longitude, editMarker, 
           img: img,
         };
         
-        const updatedMarkers = existingMarkers.map(marker => 
+        const updatedMarkers = existingMarkers.map((marker: Marker) => 
           marker.id === editMarker.id ? updatedMarker : marker
         );
         
@@ -132,8 +132,10 @@ const CreateMarkerModal = ({ visible, onClose, latitude, longitude, editMarker, 
 
   return (
     <Modal visible={visible} transparent animationType="slide">
-      <View style={styles.overlay}>
-        <View style={styles.modal}>
+      <TouchableWithoutFeedback onPress={handleCancel}>
+        <View style={styles.overlay}>
+          <TouchableWithoutFeedback onPress={() => {}}>
+            <View style={styles.modal}>
           <Text style={styles.title}>
             {editMarker ? 'Éditer le Marker' : 'Créer un Marker'}
           </Text>
@@ -188,8 +190,10 @@ const CreateMarkerModal = ({ visible, onClose, latitude, longitude, editMarker, 
               )}
             </TouchableOpacity>
           </View>
+            </View>
+          </TouchableWithoutFeedback>
         </View>
-      </View>
+      </TouchableWithoutFeedback>
     </Modal>
   );
 };

@@ -121,7 +121,7 @@ const styles = StyleSheet.create({
 
 
 
-const Maps = forwardRef((props, ref) => {
+const Maps = forwardRef((_props, ref) => {
   const coordinates = useCurrentPosition();
 
 const mapRef = React.useRef<any>(null);
@@ -193,14 +193,14 @@ const coordinateToArray = () => {
           }
           
           // Debug AsyncStorage
-          const saved = await AsyncStorage.getItem('markers');
+          await AsyncStorage.getItem('markers');
           
           setIsLoadingMap(false);
       } catch (error) {
           console.error(error);
           setIsLoadingMap(false);
       }
-  }, [coordinates]);
+  }, []);
 
   // UseEffect pour récupérer les markers après création
   useEffect(() => {
@@ -208,30 +208,37 @@ const coordinateToArray = () => {
       setIsLoadingMarkers(true);
       const markers = await getMarkers();
       
-      // Créer des animations pour les nouveaux markers
-      const newAnimations: {[key: string]: Animated.Value} = {};
-      markers.forEach((marker: Marker) => {
-        if (!animatedMarkers[marker.id]) {
-          newAnimations[marker.id] = new Animated.Value(0);
-        }
-      });
-      
       setSavedMarkers(markers);
-      setAnimatedMarkers(prev => ({ ...prev, ...newAnimations }));
+      
+      // Créer des animations pour les nouveaux markers
+      setAnimatedMarkers(prev => {
+        const newAnimations: {[key: string]: Animated.Value} = { ...prev };
+        markers.forEach((marker: Marker) => {
+          if (!newAnimations[marker.id]) {
+            newAnimations[marker.id] = new Animated.Value(0);
+          }
+        });
+        return newAnimations;
+      });
       
       // Animer les nouveaux markers un par un
-      markers.forEach((marker: Marker, index: number) => {
-        if (newAnimations[marker.id]) {
-          setTimeout(() => {
-            Animated.spring(newAnimations[marker.id], {
-              toValue: 1,
-              tension: 50,
-              friction: 8,
-              useNativeDriver: true,
-            }).start();
-          }, index * 200); // Délai de 200ms entre chaque marker
-        }
-      });
+      setTimeout(() => {
+        setAnimatedMarkers(currentAnimations => {
+          markers.forEach((marker: Marker, index: number) => {
+            if (currentAnimations[marker.id]) {
+              setTimeout(() => {
+                Animated.spring(currentAnimations[marker.id], {
+                  toValue: 1,
+                  tension: 50,
+                  friction: 8,
+                  useNativeDriver: true,
+                }).start();
+              }, index * 200); // Délai de 200ms entre chaque marker
+            }
+          });
+          return currentAnimations;
+        });
+      }, 100); // Petit délai pour s'assurer que les animations sont créées
       
       setIsLoadingMarkers(false);
     };
